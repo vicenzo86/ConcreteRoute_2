@@ -1,0 +1,94 @@
+import React, { useState } from 'react';
+import { Sidebar } from './components/Sidebar';
+import { GanttTab } from './components/GanttTab';
+import { BITableTab } from './components/BITableTab';
+import { MapTab } from './components/MapTab';
+import { SimulationParams, OptimizationResult } from './types';
+import { generateMockData } from './utils/mockSimulation';
+import { LayoutDashboard, Clock, Map as MapIcon } from 'lucide-react';
+
+const App: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'gantt' | 'bi' | 'map'>('gantt');
+  const [isRunning, setIsRunning] = useState(false);
+  const [results, setResults] = useState<OptimizationResult>({ schedule: [], works: [], summary: { totalTrips: 0, completionTime: '', efficiency: 0 } });
+  
+  const [params, setParams] = useState<SimulationParams>({
+    apiKey: '9bzBwwsjHfKmfIrrYpvtir7DbEjTUOj2vFWrAC72c4A',
+    branchAddress: 'R. Geral Hugo de Almeida - Navegantes - SC',
+    loadTime: 30,
+    unloadTime: 10,
+    totalTrucks: 27,
+    totalPumps: 6,
+    startTime: '05:00',
+    generations: 120,
+    popSize: 60
+  });
+
+  const handleRunSimulation = () => {
+    setIsRunning(true);
+    // Simulate async processing
+    setTimeout(() => {
+      const data = generateMockData(params);
+      setResults(data);
+      setIsRunning(false);
+    }, 1500);
+  };
+
+  return (
+    <div className="flex h-screen bg-slate-100 font-sans text-slate-800 overflow-hidden">
+      <Sidebar 
+        params={params} 
+        setParams={setParams} 
+        onRun={handleRunSimulation} 
+        isRunning={isRunning} 
+      />
+
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+        {/* Top Navigation for Tabs */}
+        <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm z-10">
+           <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg">
+             <button
+               onClick={() => setActiveTab('gantt')}
+               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'gantt' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+             >
+               <Clock size={16} />
+               Gantt Schedule
+             </button>
+             <button
+               onClick={() => setActiveTab('bi')}
+               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'bi' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+             >
+               <LayoutDashboard size={16} />
+               BI Dashboard
+             </button>
+             <button
+               onClick={() => setActiveTab('map')}
+               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'map' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+             >
+               <MapIcon size={16} />
+               Route Map
+             </button>
+           </div>
+           
+           {/* Summary Stats Pill */}
+           {results.summary.totalTrips > 0 && (
+             <div className="flex gap-4 text-xs font-semibold bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 text-slate-600">
+               <span>Trips: {results.summary.totalTrips}</span>
+               <span className="w-px h-4 bg-slate-300"></span>
+               <span>Finish: {results.summary.completionTime}</span>
+             </div>
+           )}
+        </div>
+
+        {/* Main Content Area */}
+        <div className="flex-1 overflow-hidden relative bg-slate-50">
+          {activeTab === 'gantt' && <GanttTab data={results} />}
+          {activeTab === 'bi' && <BITableTab data={results} />}
+          {activeTab === 'map' && <MapTab data={results} />}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;
