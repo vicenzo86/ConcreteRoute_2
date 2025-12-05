@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { SimulationParams } from '../types';
-import { Settings, Play, Truck, Activity } from 'lucide-react';
+import { Settings, Play, Truck, Activity, FileSpreadsheet, Upload } from 'lucide-react';
 
 interface SidebarProps {
   params: SimulationParams;
@@ -10,8 +10,73 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRunning }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleChange = (field: keyof SimulationParams, value: any) => {
     setParams(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split('\n');
+      const parsedData: any[] = [];
+      
+      // Simple parser for CSV or Tab-Separated Values (TSV)
+      // Expects columns: VOLUME, ADDRESS (or reversed)
+      lines.forEach((line, idx) => {
+         if (!line.trim()) return;
+         
+         // Detect separator
+         const separator = line.includes('\t') ? '\t' : (line.includes(';') ? ';' : ',');
+         const cols = line.split(separator).map(c => c.trim().replace(/^"|"$/g, ''));
+         
+         // Heuristic: Skip header row
+         if (idx === 0) {
+             const headerStr = cols.join(' ').toLowerCase();
+             if (headerStr.includes('volume') || headerStr.includes('endereco')) {
+                 return;
+             }
+         }
+
+         // Try to identify volume (number) and address (string)
+         let volume = 0;
+         let address = '';
+
+         // Check if first col is number (Volume)
+         if (!isNaN(parseFloat(cols[0])) && cols[0].length < 10) {
+             volume = parseFloat(cols[0]);
+             address = cols.slice(1).join(' '); // Join rest as address
+         } else if (!isNaN(parseFloat(cols[cols.length - 1])) && cols[cols.length - 1].length < 10) {
+             // Maybe last col is volume
+             volume = parseFloat(cols[cols.length - 1]);
+             address = cols.slice(0, cols.length - 1).join(' ');
+         } else {
+             // Try to find a numeric column? Default to first being volume as per user prompt
+             if (cols[0]) volume = parseFloat(cols[0]);
+             if (cols[1]) address = cols[1];
+         }
+
+         if (address && !isNaN(volume) && volume > 0) {
+            parsedData.push({ volume, address });
+         }
+      });
+
+      if (parsedData.length > 0) {
+         setParams(prev => ({ ...prev, uploadedData: parsedData }));
+         alert(`Successfully imported ${parsedData.length} works!`);
+      } else {
+         alert('Could not parse file. Please ensure format is: VOLUME, ADDRESS (csv/txt)');
+      }
+      
+      // Reset input
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    reader.readAsText(file);
   };
 
   return (
@@ -47,6 +112,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
               className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-yellow-500 transition-colors"
             />
           </div>
+        </div>
+
+        {/* Data Import */}
+        <div className="space-y-3">
+            <h2 className="text-xs font-semibold uppercase text-slate-500 tracking-wider flex items-center gap-1">
+                <FileSpreadsheet size={12} /> Import Data
+            </h2>
+            <div className="p-3 bg-slate-800 rounded border border-slate-700 border-dashed hover:border-slate-500 transition-colors">
+                <input 
+                    type="file" 
+                    ref={fileInputRef}
+                    accept=".csv,.txt,.tsv"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="file-upload"
+                />
+                <label htmlFor="file-upload" className="flex flex-col items-center cursor-pointer">
+                    <Upload className="text-slate-400 mb-2" size={20} />
+                    <span className="text-xs text-slate-300 font-medium">Upload Spreadsheet</span>
+                    <span className="text-[10px] text-slate-500 mt-1">Columns: VOLUME, ADDRESS</span>
+                </label>
+            </div>
+            {params.uploadedData && params.uploadedData.length > 0 && (
+                <div className="text-xs text-emerald-400 flex items-center gap-1">
+                    ✓ {params.uploadedData.length} works loaded
+                </div>
+            )}
         </div>
 
         {/* Operational Params */}

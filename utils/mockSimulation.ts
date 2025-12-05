@@ -8,17 +8,40 @@ const BASE_LAT = -26.89;
 const BASE_LNG = -48.65;
 
 export const generateMockData = (params: SimulationParams): OptimizationResult => {
-  const works: WorkSite[] = Array.from({ length: 8 }).map((_, i) => ({
-    id: `W-${i + 1}`,
-    name: `Obra Residencial ${i + 1}`,
-    address: `Rua Exemplo ${i * 100}, Navegantes - SC`,
-    loads: Math.floor(Math.random() * 5) + 3, // 3 to 8 loads
-    volume: 0, // Calculated later
-    lat: BASE_LAT + (Math.random() - 0.5) * 0.1,
-    lng: BASE_LNG + (Math.random() - 0.5) * 0.1,
-  }));
+  let works: WorkSite[] = [];
 
-  works.forEach(w => w.volume = w.loads * 8); // Assuming 8m3 per truck
+  // Check if we have uploaded data from the sidebar
+  if (params.uploadedData && params.uploadedData.length > 0) {
+    works = params.uploadedData.map((item, i) => {
+      // Create a deterministic pseudo-random offset based on the address string
+      const hash = item.address.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const latOffset = ((hash % 100) / 1000) * (hash % 2 === 0 ? 1 : -1);
+      const lngOffset = (((hash * 13) % 100) / 1000) * (hash % 3 === 0 ? 1 : -1);
+
+      return {
+        id: `W-${i + 1}`,
+        name: `Obra ${i + 1}`, // Simplified name
+        address: item.address,
+        volume: item.volume,
+        // Assume approx 8m3 per truck load if not specified
+        loads: Math.ceil(item.volume / 8),
+        lat: BASE_LAT + latOffset,
+        lng: BASE_LNG + lngOffset,
+      };
+    });
+  } else {
+    // Default random generation if no file uploaded
+    works = Array.from({ length: 8 }).map((_, i) => ({
+      id: `W-${i + 1}`,
+      name: `Obra Residencial ${i + 1}`,
+      address: `Rua Exemplo ${i * 100}, Navegantes - SC`,
+      loads: Math.floor(Math.random() * 5) + 3, // 3 to 8 loads
+      volume: 0, // Calculated later
+      lat: BASE_LAT + (Math.random() - 0.5) * 0.1,
+      lng: BASE_LNG + (Math.random() - 0.5) * 0.1,
+    }));
+    works.forEach(w => w.volume = w.loads * 8); // Assuming 8m3 per truck
+  }
 
   const schedule: ScheduleItem[] = [];
   const startDateTime = new Date();

@@ -8,6 +8,11 @@ export interface WorkSite {
   lng: number;
 }
 
+export interface UploadedWork {
+  volume: number;
+  address: string;
+}
+
 export interface SimulationParams {
   apiKey: string;
   branchAddress: string;
@@ -18,6 +23,7 @@ export interface SimulationParams {
   startTime: string; // HH:MM
   generations: number;
   popSize: number;
+  uploadedData?: UploadedWork[];
 }
 
 export interface ScheduleItem {
