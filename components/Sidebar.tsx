@@ -1,6 +1,8 @@
 import React, { useRef } from 'react';
-import { SimulationParams } from '../types';
+import { SimulationParams, UploadedWork } from '../types';
 import { Settings, Play, Truck, Activity, FileSpreadsheet, Upload } from 'lucide-react';
+// @ts-ignore - Importing from CDN via importmap
+import readXlsxFile from 'read-excel-file';
 
 interface SidebarProps {
   params: SimulationParams;
@@ -16,18 +18,78 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
     setParams(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const processParsedData = (data: UploadedWork[]) => {
+      if (data.length > 0) {
+         setParams(prev => ({ ...prev, uploadedData: data }));
+         alert(`Successfully imported ${data.length} works!`);
+      } else {
+         alert('Could not parse file. Please ensure format includes VOLUME and ADDRESS columns.');
+      }
+      // Reset input
+      if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Handle Excel (.xlsx)
+    if (file.name.endsWith('.xlsx')) {
+        try {
+            const rows = await readXlsxFile(file);
+            const parsedData: UploadedWork[] = [];
+            
+            // Skip header (row 0)
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row || row.length === 0) continue;
+
+                let volume = 0;
+                let address = '';
+
+                // Strategy: Find number for volume, string for address
+                // We check the first few columns usually
+                
+                // Helper to check if a cell is likely volume
+                const isVol = (val: any) => typeof val === 'number' && val > 0 && val < 10000;
+                
+                if (isVol(row[0])) {
+                    volume = row[0] as number;
+                    // Address might be next
+                    if (typeof row[1] === 'string') address = row[1] as string;
+                } else if (isVol(row[1])) {
+                    // Maybe Address first?
+                    if (typeof row[0] === 'string') address = row[0] as string;
+                    volume = row[1] as number;
+                }
+
+                // Fallback for address if it's spread or different
+                if (!address) {
+                    const stringParts = row.filter((c: any) => typeof c === 'string');
+                    if (stringParts.length > 0) address = stringParts.join(' ');
+                }
+
+                if (volume > 0 && address) {
+                    parsedData.push({ volume, address });
+                }
+            }
+            processParsedData(parsedData);
+
+        } catch (error) {
+            console.error(error);
+            alert('Error reading Excel file. Please ensure it is a valid .xlsx file.');
+        }
+        return;
+    }
+
+    // Handle CSV/Text
     const reader = new FileReader();
     reader.onload = (event) => {
       const text = event.target?.result as string;
       const lines = text.split('\n');
-      const parsedData: any[] = [];
+      const parsedData: UploadedWork[] = [];
       
       // Simple parser for CSV or Tab-Separated Values (TSV)
-      // Expects columns: VOLUME, ADDRESS (or reversed)
       lines.forEach((line, idx) => {
          if (!line.trim()) return;
          
@@ -43,7 +105,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
              }
          }
 
-         // Try to identify volume (number) and address (string)
          let volume = 0;
          let address = '';
 
@@ -56,7 +117,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
              volume = parseFloat(cols[cols.length - 1]);
              address = cols.slice(0, cols.length - 1).join(' ');
          } else {
-             // Try to find a numeric column? Default to first being volume as per user prompt
              if (cols[0]) volume = parseFloat(cols[0]);
              if (cols[1]) address = cols[1];
          }
@@ -65,16 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
             parsedData.push({ volume, address });
          }
       });
-
-      if (parsedData.length > 0) {
-         setParams(prev => ({ ...prev, uploadedData: parsedData }));
-         alert(`Successfully imported ${parsedData.length} works!`);
-      } else {
-         alert('Could not parse file. Please ensure format is: VOLUME, ADDRESS (csv/txt)');
-      }
-      
-      // Reset input
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      processParsedData(parsedData);
     };
     reader.readAsText(file);
   };
@@ -123,7 +174,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
                 <input 
                     type="file" 
                     ref={fileInputRef}
-                    accept=".csv,.txt,.tsv"
+                    accept=".csv,.txt,.tsv,.xlsx"
                     onChange={handleFileUpload}
                     className="hidden"
                     id="file-upload"
@@ -131,7 +182,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
                 <label htmlFor="file-upload" className="flex flex-col items-center cursor-pointer">
                     <Upload className="text-slate-400 mb-2" size={20} />
                     <span className="text-xs text-slate-300 font-medium">Upload Spreadsheet</span>
-                    <span className="text-[10px] text-slate-500 mt-1">Columns: VOLUME, ADDRESS</span>
+                    <span className="text-[10px] text-slate-500 mt-1">Supports .xlsx, .csv (Cols: Volume, Address)</span>
                 </label>
             </div>
             {params.uploadedData && params.uploadedData.length > 0 && (
