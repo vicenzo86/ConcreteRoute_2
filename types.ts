@@ -13,17 +13,29 @@ export interface UploadedWork {
   address: string;
 }
 
+export interface WorkConstraint {
+  workIndex: number; // Corresponds to the index in uploadedData or default list
+  forcedTrucks: number;
+  forcedPumpId: number; // 1-based index
+  forcedStartTime: string; // HH:MM
+  locked: boolean; // TRUE = Manual inputs, FALSE = Auto allocate
+}
+
 export interface SimulationParams {
+  mode: 'optimizer' | 'simulator'; // New Toggle
   apiKey: string;
   branchAddress: string;
-  loadTime: number; // minutes
-  unloadTime: number; // minutes
+  branchLat: string;
+  branchLng: string;
+  loadTime: number; 
+  unloadTime: number; 
   totalTrucks: number;
   totalPumps: number;
-  startTime: string; // HH:MM
+  startTime: string; 
   generations: number;
   popSize: number;
   uploadedData?: UploadedWork[];
+  manualConstraints: WorkConstraint[]; // User inputs for simulator
 }
 
 export interface ScheduleItem {
@@ -40,6 +52,7 @@ export interface ScheduleItem {
 export interface OptimizationResult {
   schedule: ScheduleItem[];
   works: WorkSite[];
+  branchLocation?: { lat: number; lng: number };
   summary: {
     totalTrips: number;
     completionTime: string;

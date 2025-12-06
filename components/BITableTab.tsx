@@ -2,8 +2,8 @@ import React from 'react';
 import { OptimizationResult } from '../types';
 import { Table, Download, Filter } from 'lucide-react';
 
-// Declare global writeXlsxFile from index.html script
-declare const writeXlsxFile: any;
+// Declare global XLSX from index.html script
+declare const XLSX: any;
 
 interface BITableTabProps {
   data: OptimizationResult;
@@ -35,70 +35,68 @@ export const BITableTab: React.FC<BITableTabProps> = ({ data }) => {
     };
   }).filter(Boolean);
 
-  // --- EXPORT FUNCTION ---
-  const handleExport = async () => {
-    if (typeof writeXlsxFile === 'undefined') {
-        alert("Export library not loaded. Please refresh the page.");
+  // --- EXPORT FUNCTION (Using SheetJS) ---
+  const handleExport = () => {
+    if (typeof XLSX === 'undefined') {
+        alert("Export library (SheetJS) not loaded. Please refresh the page.");
         return;
     }
 
-    // 1. Dados_Obras Schema
-    const worksSchema = [
-        { column: 'ID', type: String, value: (w: any) => w.id },
-        { column: 'Name', type: String, value: (w: any) => w.name },
-        { column: 'Address', type: String, value: (w: any) => w.address },
-        { column: 'Loads', type: Number, value: (w: any) => w.loads },
-        { column: 'Volume', type: Number, value: (w: any) => w.volume },
-        { column: 'Lat', type: Number, value: (w: any) => w.lat },
-        { column: 'Lng', type: Number, value: (w: any) => w.lng },
-    ];
+    // 1. Prepare Data for "Dados_Obras"
+    const worksData = data.works.map(w => ({
+        ID: w.id,
+        Name: w.name,
+        Address: w.address,
+        Loads: w.loads,
+        Volume_m3: w.volume,
+        Lat: w.lat,
+        Lng: w.lng
+    }));
 
-    // 2. Linha_do_Tempo Schema
-    const timelineSchema = [
-        { column: 'Work ID', type: String, value: (s: any) => s.workId },
-        { column: 'Truck ID', type: String, value: (s: any) => s.truckId },
-        { column: 'Pump ID', type: String, value: (s: any) => s.pumpId },
-        { column: 'Load #', type: Number, value: (s: any) => s.loadNumber },
-        { column: 'Start Time', type: String, value: (s: any) => s.startTime.toLocaleString() },
-        { column: 'End Time', type: String, value: (s: any) => s.endTime.toLocaleString() },
-    ];
+    // 2. Prepare Data for "Linha_do_Tempo"
+    const timelineData = data.schedule.map(s => ({
+        WorkID: s.workId,
+        TruckID: s.truckId,
+        PumpID: s.pumpId,
+        LoadNum: s.loadNumber,
+        StartTime: s.startTime.toLocaleString(),
+        EndTime: s.endTime.toLocaleString(),
+        Status: s.status
+    }));
 
-    // 3. Mock logic for "Bomba_X" sheets
-    // We group schedule by Pump
-    const pumps = Array.from(new Set(data.schedule.map(s => s.pumpId)));
-    
-    const sheets = [
-        {
-            name: 'Dados_Obras',
-            data: data.works,
-            schema: worksSchema
-        },
-        {
-            name: 'Linha_do_Tempo',
-            data: data.schedule,
-            schema: timelineSchema
-        }
-    ];
+    // Create Workbook
+    const wb = XLSX.utils.book_new();
 
-    // Add per-pump sheets
-    pumps.forEach((pumpId) => {
-        const pid = String(pumpId);
-        const pumpData = data.schedule.filter(s => s.pumpId === pid);
-        sheets.push({
-            name: pid.replace(/\s+/g, '_'),
-            data: pumpData,
-            schema: timelineSchema
-        });
+    // Append "Dados_Obras"
+    const wsWorks = XLSX.utils.json_to_sheet(worksData);
+    XLSX.utils.book_append_sheet(wb, wsWorks, "Dados_Obras");
+
+    // Append "Linha_do_Tempo"
+    const wsTimeline = XLSX.utils.json_to_sheet(timelineData);
+    XLSX.utils.book_append_sheet(wb, wsTimeline, "Linha_do_Tempo");
+
+    // 3. Append per-pump sheets
+    const pumps = Array.from(new Set(data.schedule.map(s => s.pumpId))).sort();
+    pumps.forEach(pumpId => {
+        const pumpItems = data.schedule
+            .filter(s => s.pumpId === pumpId)
+            .sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
+            .map(s => ({
+                WorkID: s.workId,
+                TruckID: s.truckId,
+                LoadNum: s.loadNumber,
+                StartTime: s.startTime.toLocaleTimeString(),
+                EndTime: s.endTime.toLocaleTimeString()
+            }));
+        
+        // Clean sheet name (max 31 chars)
+        const sheetName = String(pumpId).replace(/[^a-zA-Z0-9 ]/g, "").substring(0, 31);
+        const wsPump = XLSX.utils.json_to_sheet(pumpItems);
+        XLSX.utils.book_append_sheet(wb, wsPump, sheetName);
     });
 
-    try {
-        await writeXlsxFile(sheets, {
-            fileName: `Concrete_Plan_${new Date().toISOString().slice(0,10)}.xlsx`
-        });
-    } catch (e) {
-        console.error(e);
-        alert("Error generating Excel file. Check console for details.");
-    }
+    // Write File
+    XLSX.writeFile(wb, `Concrete_Plan_${new Date().toISOString().slice(0,10)}.xlsx`);
   };
 
   return (

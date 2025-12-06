@@ -38,17 +38,17 @@ const createCustomIcon = (label: string | number, color: string, isSquare = fals
 };
 
 // Component to auto-zoom to bounds
-const MapBounds: React.FC<{ works: any[] }> = ({ works }) => {
+const MapBounds: React.FC<{ works: any[]; branch: { lat: number, lng: number } }> = ({ works, branch }) => {
     const map = useMap();
     
     useEffect(() => {
         if (works.length > 0) {
-            const bounds = L.latLngBounds(works.map(w => [w.lat, w.lng]));
-            // Add branch roughly
-            bounds.extend([-26.89, -48.65]); 
+            const points = works.map(w => [w.lat, w.lng] as [number, number]);
+            if (branch) points.push([branch.lat, branch.lng]);
+            const bounds = L.latLngBounds(points);
             map.fitBounds(bounds, { padding: [50, 50] });
         }
-    }, [works, map]);
+    }, [works, branch, map]);
 
     return null;
 };
@@ -56,7 +56,10 @@ const MapBounds: React.FC<{ works: any[] }> = ({ works }) => {
 export const MapTab: React.FC<MapTabProps> = ({ data }) => {
     if (data.works.length === 0) return <div className="p-10 text-center text-slate-500">No data available. Run simulation first.</div>;
 
-    const branchCoords: [number, number] = [-26.89, -48.65]; // Mock Branch Location
+    // Use branch location from data or fallback
+    const branchCoords: [number, number] = data.branchLocation 
+        ? [data.branchLocation.lat, data.branchLocation.lng] 
+        : [-26.89, -48.65];
 
     return (
         <div className="h-full flex flex-col relative">
@@ -92,13 +95,13 @@ export const MapTab: React.FC<MapTabProps> = ({ data }) => {
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
                     
-                    <MapBounds works={data.works} />
+                    <MapBounds works={data.works} branch={data.branchLocation || {lat: branchCoords[0], lng: branchCoords[1]}} />
 
                     {/* Branch Marker */}
                     <Marker position={branchCoords} icon={createCustomIcon('DP', '#1e293b', true)}>
                         <Popup>
                             <div className="font-bold text-slate-800">Central Branch</div>
-                            <div className="text-xs">Navegantes - SC</div>
+                            <div className="text-xs">Location: {branchCoords[0].toFixed(4)}, {branchCoords[1].toFixed(4)}</div>
                         </Popup>
                     </Marker>
 

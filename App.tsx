@@ -10,28 +10,42 @@ import { LayoutDashboard, Clock, Map as MapIcon } from 'lucide-react';
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'gantt' | 'bi' | 'map'>('gantt');
   const [isRunning, setIsRunning] = useState(false);
-  const [results, setResults] = useState<OptimizationResult>({ schedule: [], works: [], summary: { totalTrips: 0, completionTime: '', efficiency: 0 } });
+  const [results, setResults] = useState<OptimizationResult>({ 
+    schedule: [], 
+    works: [], 
+    summary: { totalTrips: 0, completionTime: '', efficiency: 0 } 
+  });
   
   const [params, setParams] = useState<SimulationParams>({
+    mode: 'optimizer', // Default mode
     apiKey: '9bzBwwsjHfKmfIrrYpvtir7DbEjTUOj2vFWrAC72c4A',
     branchAddress: 'R. Geral Hugo de Almeida - Navegantes - SC',
+    branchLat: '',
+    branchLng: '',
     loadTime: 30,
     unloadTime: 10,
     totalTrucks: 27,
     totalPumps: 6,
     startTime: '05:00',
     generations: 120,
-    popSize: 60
+    popSize: 60,
+    manualConstraints: [] // Init empty
   });
 
-  const handleRunSimulation = () => {
+  const handleRunSimulation = async () => {
     setIsRunning(true);
-    // Simulate async processing
-    setTimeout(() => {
-      const data = generateMockData(params);
-      setResults(data);
-      setIsRunning(false);
-    }, 1500);
+    // Introduce a small delay to ensure UI updates before heavy processing/fetching
+    setTimeout(async () => {
+      try {
+        const data = await generateMockData(params);
+        setResults(data);
+      } catch (error) {
+        console.error("Simulation failed:", error);
+        alert("An error occurred during the simulation. Check console.");
+      } finally {
+        setIsRunning(false);
+      }
+    }, 100);
   };
 
   return (
@@ -73,6 +87,9 @@ const App: React.FC = () => {
            {/* Summary Stats Pill */}
            {results.summary.totalTrips > 0 && (
              <div className="flex gap-4 text-xs font-semibold bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 text-slate-600">
+               <span className="text-slate-400 mr-2 uppercase tracking-wider text-[10px]">
+                 {params.mode === 'simulator' ? 'Simulation Mode' : 'AI Optimization'}
+               </span>
                <span>Trips: {results.summary.totalTrips}</span>
                <span className="w-px h-4 bg-slate-300"></span>
                <span>Finish: {results.summary.completionTime}</span>
