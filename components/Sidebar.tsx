@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { SimulationParams, UploadedWork, WorkConstraint } from '../types';
 import { Settings, Play, Truck, Activity, FileSpreadsheet, Upload, Sliders, Calculator, Zap, Trash2, Lock, Unlock } from 'lucide-react';
@@ -333,6 +334,41 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
         {/* Global Operational Params (Always visible but subordinated in Sim mode) */}
         <div className="space-y-3 border-t border-slate-800 pt-3">
           <h2 className="text-xs font-semibold uppercase text-slate-500 tracking-wider">Global Settings</h2>
+          
+          {/* Resources */}
+          <div className="grid grid-cols-2 gap-3">
+             <div className="space-y-1">
+                <label className="text-[10px] text-slate-400">Total Pumps</label>
+                <input 
+                    type="number"
+                    min="1"
+                    value={params.totalPumps}
+                    onChange={(e) => handleChange('totalPumps', Number(e.target.value))}
+                    className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none"
+                />
+             </div>
+             <div className="space-y-1">
+                <label className="text-[10px] text-slate-400">Total Trucks</label>
+                <input 
+                    type="number"
+                    min="1"
+                    value={params.totalTrucks}
+                    onChange={(e) => handleChange('totalTrucks', Number(e.target.value))}
+                    className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none"
+                />
+             </div>
+             <div className="space-y-1">
+                <label className="text-[10px] text-slate-400">Capacity (m³)</label>
+                <input 
+                    type="number"
+                    min="1"
+                    value={params.truckCapacity}
+                    onChange={(e) => handleChange('truckCapacity', Number(e.target.value))}
+                    className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none"
+                />
+             </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-[10px] text-slate-400">Load (min)</label>

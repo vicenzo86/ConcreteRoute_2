@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { GanttTab } from './components/GanttTab';
@@ -25,6 +26,7 @@ const App: React.FC = () => {
     loadTime: 30,
     unloadTime: 10,
     totalTrucks: 27,
+    truckCapacity: 8, // Default 8m3
     totalPumps: 6,
     startTime: '05:00',
     generations: 120,

@@ -1,3 +1,4 @@
+
 import { OptimizationResult, ScheduleItem, SimulationParams, WorkSite } from '../types';
 
 // ==========================================
@@ -108,7 +109,7 @@ export const generateMockData = async (params: SimulationParams): Promise<Optimi
         id: `W-${i + 1}`,
         name: `Obra ${i + 1}`,
         address: item.address,
-        volume: item.loads * 10,
+        volume: item.loads * params.truckCapacity,
         loads: item.loads > 0 ? item.loads : 1,
         lat: coords.lat,
         lng: coords.lng,
@@ -125,7 +126,7 @@ export const generateMockData = async (params: SimulationParams): Promise<Optimi
         name: `Residencial ${i + 1}`,
         address: `Rua Exemplo ${i * 100}, Navegantes - SC`,
         loads: loads,
-        volume: loads * 10,
+        volume: loads * params.truckCapacity,
         lat: coords.lat,
         lng: coords.lng,
       };

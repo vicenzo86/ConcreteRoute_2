@@ -1,3 +1,4 @@
+
 export interface WorkSite {
   id: string;
   name: string;
@@ -30,6 +31,7 @@ export interface SimulationParams {
   loadTime: number; 
   unloadTime: number; 
   totalTrucks: number;
+  truckCapacity: number; // New Parameter: m3 per truck
   totalPumps: number;
   startTime: string; 
   generations: number;
