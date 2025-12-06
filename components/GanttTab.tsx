@@ -27,7 +27,7 @@ export const GanttTab: React.FC<GanttTabProps> = ({ data }) => {
     return `${((end.getTime() - start.getTime()) / totalDuration) * 100}%`;
   };
 
-  const timeMarkers = [];
+  const timeMarkers: Date[] = [];
   for (let t = startTs; t <= endTs; t += 60 * 60000) { // Every hour
     timeMarkers.push(new Date(t));
   }
