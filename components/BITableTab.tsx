@@ -157,7 +157,7 @@ export const BITableTab: React.FC<BITableTabProps> = ({ data }) => {
                     {row?.endTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                   </td>
                   <td className="p-4 text-right text-slate-600 text-sm">
-                    {Math.floor(row?.durationMin || 0 / 60)}h {(row?.durationMin || 0) % 60}m
+                    {Math.floor((row?.durationMin || 0) / 60)}h {(row?.durationMin || 0) % 60}m
                   </td>
                   <td className="p-4 text-center">
                     <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-slate-100 text-slate-700">

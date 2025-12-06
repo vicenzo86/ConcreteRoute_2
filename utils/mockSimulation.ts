@@ -289,7 +289,7 @@ function runSimulator(works: WorkSite[], branchCoords: {lat: number, lng: number
         const constraint = params.manualConstraints[workIdx];
         
         const pumpId = constraint.forcedPumpId; 
-        const trucks = constraint.forcedTrucks;
+        const trucks = Math.max(1, constraint.forcedTrucks); // Ensure at least 1 truck
         const desiredStart = getMinutesFromMidnight(constraint.forcedStartTime);
 
         // Find pump state (pumpId is 1-based)
@@ -302,8 +302,6 @@ function runSimulator(works: WorkSite[], branchCoords: {lat: number, lng: number
         const readyToTravel = pumpState.availableTime; 
         
         // Arrival: Must be at least ready + travel, AND at least user's desired start
-        // If the pump is busy until 10:00, but user wants start at 08:00, we have to push it to 10:00 + travel.
-        // User's "Start Time" usually implies "Arrival at site".
         let arrivalTime = readyToTravel + travelTime;
         if (arrivalTime < desiredStart) {
             arrivalTime = desiredStart;
@@ -337,25 +335,16 @@ function runSimulator(works: WorkSite[], branchCoords: {lat: number, lng: number
     }
 
     // --- PHASE 2: Process Auto/Unlocked Works ---
-    // Standard Greedy Heuristic: Assign to the pump that becomes free earliest
-    // Calculate priorities for remaining works (e.g., further away first, or larger volume)
-    // Here we just use original order or sort by volume for basic optimization
     const autoWorks = autoIndices.map(i => works[i]).sort((a, b) => b.loads - a.loads);
 
     for (const work of autoWorks) {
-        // Find pump with earliest available time
-        // Note: We use ALL pumps. If user only locked Pump 1-3, Pumps 4-6 are still at 'globalStartTimeMin'
-        // and will likely be picked immediately.
         pumpsState.sort((a, b) => a.availableTime - b.availableTime);
         const bestPump = pumpsState[0];
 
         const travelTime = getSimulatedTravelTime(bestPump.coords, work);
         const arrivalTime = bestPump.availableTime + travelTime;
         
-        // Default trucks for Auto works (use 4 or distribute remaining?)
-        // For simplicity in Hybrid mode, we use a fixed efficiency number (e.g. 4 trucks) 
-        // OR we could check remaining global trucks. Let's assume 4 per pump is standard.
-        const trucks = 4;
+        const trucks = 4; // Default standard for auto
 
         const cycleTime = params.loadTime + (2 * travelTime) + params.unloadTime;
         const durationMin = (cycleTime * work.loads) / trucks;
