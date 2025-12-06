@@ -2,6 +2,9 @@ import React from 'react';
 import { OptimizationResult } from '../types';
 import { Table, Download, Filter } from 'lucide-react';
 
+// Declare global writeXlsxFile from index.html script
+declare const writeXlsxFile: any;
+
 interface BITableTabProps {
   data: OptimizationResult;
 }
@@ -13,7 +16,6 @@ export const BITableTab: React.FC<BITableTabProps> = ({ data }) => {
     const workItems = data.schedule.filter(s => s.workId === work.id);
     if (workItems.length === 0) return null;
 
-    // Determine start/end from items
     const sortedItems = [...workItems].sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
     const startTime = sortedItems[0].startTime;
     const endTime = sortedItems[sortedItems.length - 1].endTime;
@@ -33,6 +35,72 @@ export const BITableTab: React.FC<BITableTabProps> = ({ data }) => {
     };
   }).filter(Boolean);
 
+  // --- EXPORT FUNCTION ---
+  const handleExport = async () => {
+    if (typeof writeXlsxFile === 'undefined') {
+        alert("Export library not loaded. Please refresh the page.");
+        return;
+    }
+
+    // 1. Dados_Obras Schema
+    const worksSchema = [
+        { column: 'ID', type: String, value: (w: any) => w.id },
+        { column: 'Name', type: String, value: (w: any) => w.name },
+        { column: 'Address', type: String, value: (w: any) => w.address },
+        { column: 'Loads', type: Number, value: (w: any) => w.loads },
+        { column: 'Volume', type: Number, value: (w: any) => w.volume },
+        { column: 'Lat', type: Number, value: (w: any) => w.lat },
+        { column: 'Lng', type: Number, value: (w: any) => w.lng },
+    ];
+
+    // 2. Linha_do_Tempo Schema
+    const timelineSchema = [
+        { column: 'Work ID', type: String, value: (s: any) => s.workId },
+        { column: 'Truck ID', type: String, value: (s: any) => s.truckId },
+        { column: 'Pump ID', type: String, value: (s: any) => s.pumpId },
+        { column: 'Load #', type: Number, value: (s: any) => s.loadNumber },
+        { column: 'Start Time', type: String, value: (s: any) => s.startTime.toLocaleString() },
+        { column: 'End Time', type: String, value: (s: any) => s.endTime.toLocaleString() },
+    ];
+
+    // 3. Mock logic for "Bomba_X" sheets
+    // We group schedule by Pump
+    const pumps = Array.from(new Set(data.schedule.map(s => s.pumpId)));
+    
+    const sheets = [
+        {
+            name: 'Dados_Obras',
+            data: data.works,
+            schema: worksSchema
+        },
+        {
+            name: 'Linha_do_Tempo',
+            data: data.schedule,
+            schema: timelineSchema
+        }
+    ];
+
+    // Add per-pump sheets
+    pumps.forEach((pumpId) => {
+        const pid = String(pumpId);
+        const pumpData = data.schedule.filter(s => s.pumpId === pid);
+        sheets.push({
+            name: pid.replace(/\s+/g, '_'),
+            data: pumpData,
+            schema: timelineSchema
+        });
+    });
+
+    try {
+        await writeXlsxFile(sheets, {
+            fileName: `Concrete_Plan_${new Date().toISOString().slice(0,10)}.xlsx`
+        });
+    } catch (e) {
+        console.error(e);
+        alert("Error generating Excel file. Check console for details.");
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-slate-50">
       <div className="p-6 bg-white border-b border-slate-200 flex justify-between items-center shadow-sm">
@@ -47,7 +115,9 @@ export const BITableTab: React.FC<BITableTabProps> = ({ data }) => {
           <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded text-slate-600 hover:bg-slate-50 text-sm font-medium">
             <Filter size={16} /> Filter
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 shadow-md text-sm font-medium transition-colors">
+          <button 
+            onClick={handleExport}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 shadow-md text-sm font-medium transition-colors">
             <Download size={16} /> Export Excel
           </button>
         </div>

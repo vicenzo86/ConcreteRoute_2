@@ -9,7 +9,7 @@ export interface WorkSite {
 }
 
 export interface UploadedWork {
-  volume: number;
+  loads: number;
   address: string;
 }
 

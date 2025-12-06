@@ -24,7 +24,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
          setParams(prev => ({ ...prev, uploadedData: data }));
          alert(`Successfully imported ${data.length} works!`);
       } else {
-         alert('Could not parse file. Please ensure format includes VOLUME and ADDRESS columns.');
+         alert('Could not parse file. Please ensure format includes LOADS (Cargas) and ADDRESS columns.');
       }
       // Reset input
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -46,23 +46,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
                 const row = rows[i];
                 if (!row || row.length === 0) continue;
 
-                let volume = 0;
+                let loads = 0;
                 let address = '';
 
-                // Strategy: Find number for volume, string for address
+                // Strategy: Find number for loads, string for address
                 // We check the first few columns usually
                 
-                // Helper to check if a cell is likely volume
-                const isVol = (val: any) => typeof val === 'number' && val > 0 && val < 10000;
+                // Helper to check if a cell is likely load count (small integer usually)
+                const isLoad = (val: any) => typeof val === 'number' && val > 0 && val < 500;
                 
-                if (isVol(row[0])) {
-                    volume = row[0] as number;
+                if (isLoad(row[0])) {
+                    loads = row[0] as number;
                     // Address might be next
                     if (typeof row[1] === 'string') address = row[1] as string;
-                } else if (isVol(row[1])) {
+                } else if (isLoad(row[1])) {
                     // Maybe Address first?
                     if (typeof row[0] === 'string') address = row[0] as string;
-                    volume = row[1] as number;
+                    loads = row[1] as number;
                 }
 
                 // Fallback for address if it's spread or different
@@ -71,8 +71,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
                     if (stringParts.length > 0) address = stringParts.join(' ');
                 }
 
-                if (volume > 0 && address) {
-                    parsedData.push({ volume, address });
+                if (loads > 0 && address) {
+                    parsedData.push({ loads, address });
                 }
             }
             processParsedData(parsedData);
@@ -102,29 +102,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
          // Heuristic: Skip header row
          if (idx === 0) {
              const headerStr = cols.join(' ').toLowerCase();
-             if (headerStr.includes('volume') || headerStr.includes('endereco')) {
+             if (headerStr.includes('cargas') || headerStr.includes('loads') || headerStr.includes('endereco')) {
                  return;
              }
          }
 
-         let volume = 0;
+         let loads = 0;
          let address = '';
 
-         // Check if first col is number (Volume)
-         if (!isNaN(parseFloat(cols[0])) && cols[0].length < 10) {
-             volume = parseFloat(cols[0]);
+         // Check if first col is number (Loads)
+         if (!isNaN(parseFloat(cols[0])) && cols[0].length < 5) {
+             loads = parseFloat(cols[0]);
              address = cols.slice(1).join(' '); // Join rest as address
-         } else if (!isNaN(parseFloat(cols[cols.length - 1])) && cols[cols.length - 1].length < 10) {
-             // Maybe last col is volume
-             volume = parseFloat(cols[cols.length - 1]);
+         } else if (!isNaN(parseFloat(cols[cols.length - 1])) && cols[cols.length - 1].length < 5) {
+             // Maybe last col is loads
+             loads = parseFloat(cols[cols.length - 1]);
              address = cols.slice(0, cols.length - 1).join(' ');
          } else {
-             if (cols[0]) volume = parseFloat(cols[0]);
+             if (cols[0]) loads = parseFloat(cols[0]);
              if (cols[1]) address = cols[1];
          }
 
-         if (address && !isNaN(volume) && volume > 0) {
-            parsedData.push({ volume, address });
+         if (address && !isNaN(loads) && loads > 0) {
+            parsedData.push({ loads, address });
          }
       });
       processParsedData(parsedData);
@@ -184,7 +184,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
                 <label htmlFor="file-upload" className="flex flex-col items-center cursor-pointer">
                     <Upload className="text-slate-400 mb-2" size={20} />
                     <span className="text-xs text-slate-300 font-medium">Upload Spreadsheet</span>
-                    <span className="text-[10px] text-slate-500 mt-1">Supports .xlsx, .csv (Cols: Volume, Address)</span>
+                    <span className="text-[10px] text-slate-500 mt-1">Supports .xlsx (Cols: Loads, Address)</span>
                 </label>
             </div>
             {params.uploadedData && params.uploadedData.length > 0 && (
