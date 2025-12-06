@@ -1,5 +1,5 @@
 {
-  "name": "ConcreteFlow Optimizer",
+  "name": "Concrete Router",
   "description": "A modern React frontend for concrete delivery routing, featuring a Gantt timeline, BI dashboard, and interactive map visualization with genetic algorithm result simulation.",
   "requestFramePermissions": []
 }

@@ -135,7 +135,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
       <div className="p-6 border-b border-slate-700">
         <h1 className="text-xl font-bold flex items-center gap-2">
           <Truck className="text-yellow-500" />
-          ConcreteFlow
+          Concrete Router
         </h1>
         <p className="text-xs text-slate-400 mt-1">Intelligent Routing System</p>
       </div>
