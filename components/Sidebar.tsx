@@ -389,7 +389,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
               />
             </div>
           </div>
+          
+          {/* Start Date & Time */}
           <div className="grid grid-cols-2 gap-3">
+             <div className="space-y-1">
+                <label className="text-[10px] text-slate-400">Start Date</label>
+                <input 
+                    type="date" 
+                    value={params.startDate}
+                    onChange={(e) => handleChange('startDate', e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none"
+                />
+             </div>
              <div className="space-y-1">
                 <label className="text-[10px] text-slate-400">Start Time</label>
                 <input 
@@ -399,18 +410,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
                     className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none"
                 />
              </div>
-             {params.mode === 'optimizer' && (
-                <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400">Generations</label>
-                    <input 
-                        type="number" 
-                        value={params.generations}
-                        onChange={(e) => handleChange('generations', Number(e.target.value))}
-                        className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none"
-                    />
-                </div>
-             )}
           </div>
+          
+          {/* Optimizer settings */}
+          {params.mode === 'optimizer' && (
+            <div className="space-y-1">
+                <label className="text-[10px] text-slate-400">Generations</label>
+                <input 
+                    type="number" 
+                    value={params.generations}
+                    onChange={(e) => handleChange('generations', Number(e.target.value))}
+                    className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none"
+                />
+            </div>
+          )}
         </div>
 
         {/* Action Button */}

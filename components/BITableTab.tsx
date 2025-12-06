@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { OptimizationResult } from '../types';
 import { Table, Download, Filter } from 'lucide-react';
@@ -151,10 +152,10 @@ export const BITableTab: React.FC<BITableTabProps> = ({ data }) => {
                     </span>
                   </td>
                   <td className="p-4 text-center text-slate-600 font-mono text-sm">
-                    {row?.startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    {row?.startTime.toLocaleString([], {day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit'})}
                   </td>
                   <td className="p-4 text-center text-slate-600 font-mono text-sm">
-                    {row?.endTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    {row?.endTime.toLocaleString([], {day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit'})}
                   </td>
                   <td className="p-4 text-right text-slate-600 text-sm">
                     {Math.floor((row?.durationMin || 0) / 60)}h {(row?.durationMin || 0) % 60}m

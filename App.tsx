@@ -28,6 +28,7 @@ const App: React.FC = () => {
     totalTrucks: 27,
     truckCapacity: 8, // Default 8m3
     totalPumps: 6,
+    startDate: new Date().toISOString().split('T')[0], // Default today YYYY-MM-DD
     startTime: '05:00',
     generations: 120,
     popSize: 60,

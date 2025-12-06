@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { OptimizationResult } from '../types';
 import { Clock, Hammer } from 'lucide-react';
@@ -60,10 +61,14 @@ export const GanttTab: React.FC<GanttTabProps> = ({ data }) => {
               {timeMarkers.map((time, idx) => (
                 <div 
                   key={idx} 
-                  className="absolute text-xs text-slate-400 transform -translate-x-1/2"
+                  className="absolute text-xs text-slate-400 transform -translate-x-1/2 flex flex-col items-center"
                   style={{ left: getLeft(time) }}
                 >
-                  {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <span>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  {/* Show date if it's 00:00 or the first marker */}
+                  {(idx === 0 || time.getHours() === 0) && (
+                      <span className="text-[9px] text-slate-300 font-bold">{time.toLocaleDateString([], {day: '2-digit', month: '2-digit'})}</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -92,7 +97,7 @@ export const GanttTab: React.FC<GanttTabProps> = ({ data }) => {
                         <Hammer size={12} /> {pumpId}
                       </div>
                       <div className="text-xs text-slate-400 mt-1">
-                        {workStart.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} - {workEnd.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                        {workStart.toLocaleString([], {day: '2-digit', month: '2-digit', hour:'2-digit', minute:'2-digit'})}
                       </div>
                     </div>
 
@@ -135,8 +140,8 @@ export const GanttTab: React.FC<GanttTabProps> = ({ data }) => {
                           <div className="absolute bottom-full mb-2 hidden group-hover/item:block bg-slate-800 text-white text-xs p-2 rounded shadow-lg whitespace-nowrap z-20">
                              <div><strong>Load #{item.loadNumber}</strong></div>
                              <div>Truck: {item.truckId}</div>
-                             <div>Start: {item.startTime.toLocaleTimeString()}</div>
-                             <div>End: {item.endTime.toLocaleTimeString()}</div>
+                             <div>Start: {item.startTime.toLocaleString([], {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})}</div>
+                             <div>End: {item.endTime.toLocaleString([], {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})}</div>
                           </div>
                         </div>
                       ))}

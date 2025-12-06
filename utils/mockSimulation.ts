@@ -188,9 +188,12 @@ function runOptimizer(works: WorkSite[], branchCoords: {lat: number, lng: number
   }));
 
   const schedule: ScheduleItem[] = [];
-  const startDateTime = new Date();
+  
+  // CONSTRUCT START DATE TIME
+  const [year, month, day] = params.startDate.split('-').map(Number);
   const [sh, sm] = params.startTime.split(':').map(Number);
-  startDateTime.setHours(sh, sm, 0, 0);
+  // Month is 0-indexed in Date constructor
+  const startDateTime = new Date(year, month - 1, day, sh, sm, 0, 0);
 
   const getFreePumps = (timeRef: number) => pumps.filter(p => p.availableTime <= timeRef + 0.01);
 
@@ -251,15 +254,17 @@ function runOptimizer(works: WorkSite[], branchCoords: {lat: number, lng: number
 // ==========================================
 function runSimulator(works: WorkSite[], branchCoords: {lat: number, lng: number}, params: SimulationParams): OptimizationResult {
     const schedule: ScheduleItem[] = [];
-    const baseDate = new Date();
-    baseDate.setHours(0, 0, 0, 0);
+    
+    // CONSTRUCT BASE DATE (00:00 of Selected Day)
+    const [year, month, day] = params.startDate.split('-').map(Number);
+    const baseDate = new Date(year, month - 1, day, 0, 0, 0, 0);
 
     const globalStartTimeMin = getMinutesFromMidnight(params.startTime);
 
     // Initialize Pumps State (All pumps, even unused ones)
     const pumpsState = Array.from({ length: params.totalPumps }).map((_, i) => ({
         id: i + 1,
-        availableTime: globalStartTimeMin, // Starts at global start time
+        availableTime: globalStartTimeMin, // Starts at global start time (minutes from midnight)
         coords: { ...branchCoords },
         trucks: 4 // Default trucks for auto-allocated works
     }));
@@ -379,13 +384,14 @@ function buildResult(works: WorkSite[], branchCoords: {lat: number, lng: number}
     const allEndTimes = schedule.map(s => s.endTime.getTime());
     const maxTime = allEndTimes.length > 0 ? new Date(Math.max(...allEndTimes)) : new Date();
     
+    // Formatting completion time with Date for clarity in summary
     return {
       works,
       branchLocation: branchCoords,
       schedule: schedule.sort((a,b) => a.startTime.getTime() - b.startTime.getTime()),
       summary: {
         totalTrips: schedule.length,
-        completionTime: maxTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        completionTime: maxTime.toLocaleString([], { day:'2-digit', month:'2-digit', hour: '2-digit', minute: '2-digit' }),
         efficiency: 94.5 // Mock efficiency
       }
     };

@@ -33,6 +33,7 @@ export interface SimulationParams {
   totalTrucks: number;
   truckCapacity: number; // New Parameter: m3 per truck
   totalPumps: number;
+  startDate: string; // New Parameter: YYYY-MM-DD
   startTime: string; 
   generations: number;
   popSize: number;

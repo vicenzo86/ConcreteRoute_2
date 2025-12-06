@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { OptimizationResult } from '../types';
@@ -113,8 +114,8 @@ export const MapTab: React.FC<MapTabProps> = ({ data }) => {
 
                         // Info for popup
                         const pump = hasItems ? sorted[0].pumpId : 'N/A';
-                        const start = hasItems ? sorted[0].startTime.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '--:--';
-                        const end = hasItems ? sorted[sorted.length-1].endTime.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '--:--';
+                        const start = hasItems ? sorted[0].startTime.toLocaleString([], {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '--:--';
+                        const end = hasItems ? sorted[sorted.length-1].endTime.toLocaleString([], {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '--:--';
                         
                         // Cycle colors
                         const markerColor = MARKER_COLORS[idx % MARKER_COLORS.length];
