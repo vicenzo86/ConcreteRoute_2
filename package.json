@@ -14,8 +14,7 @@
     "react-leaflet": "^5.0.0",
     "react-dom": "^19.2.1",
     "react": "^19.2.1",
-    "leaflet": "^1.9.4",
-    "read-excel-file": "^5.8.5"
+    "leaflet": "^1.9.4"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

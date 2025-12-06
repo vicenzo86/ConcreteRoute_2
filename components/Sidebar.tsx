@@ -1,8 +1,9 @@
 import React, { useRef } from 'react';
 import { SimulationParams, UploadedWork } from '../types';
 import { Settings, Play, Truck, Activity, FileSpreadsheet, Upload } from 'lucide-react';
-// @ts-ignore - Importing from CDN via importmap
-import readXlsxFile from 'read-excel-file';
+
+// Declare global variable loaded via script tag in index.html
+declare const readXlsxFile: any;
 
 interface SidebarProps {
   params: SimulationParams;
@@ -36,6 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
     // Handle Excel (.xlsx)
     if (file.name.endsWith('.xlsx')) {
         try {
+            // Use global readXlsxFile function
             const rows = await readXlsxFile(file);
             const parsedData: UploadedWork[] = [];
             
