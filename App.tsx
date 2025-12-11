@@ -11,6 +11,7 @@ import { LayoutDashboard, Clock, Map as MapIcon } from 'lucide-react';
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'gantt' | 'bi' | 'map'>('gantt');
   const [isRunning, setIsRunning] = useState(false);
+  
   const [results, setResults] = useState<OptimizationResult>({ 
     schedule: [], 
     works: [], 
@@ -18,7 +19,7 @@ const App: React.FC = () => {
   });
   
   const [params, setParams] = useState<SimulationParams>({
-    mode: 'optimizer', // Default mode
+    mode: 'optimizer',
     apiKey: '9bzBwwsjHfKmfIrrYpvtir7DbEjTUOj2vFWrAC72c4A',
     branchAddress: 'R. Geral Hugo de Almeida - Navegantes - SC',
     branchLat: '',
@@ -26,25 +27,25 @@ const App: React.FC = () => {
     loadTime: 30,
     unloadTime: 10,
     totalTrucks: 27,
-    truckCapacity: 8, // Default 8m3
+    truckCapacity: 8,
     totalPumps: 6,
-    startDate: new Date().toISOString().split('T')[0], // Default today YYYY-MM-DD
+    startDate: new Date().toISOString().split('T')[0],
     startTime: '05:00',
     generations: 120,
     popSize: 60,
-    manualConstraints: [] // Init empty
+    manualConstraints: []
   });
 
   const handleRunSimulation = async () => {
     setIsRunning(true);
-    // Introduce a small delay to ensure UI updates before heavy processing/fetching
     setTimeout(async () => {
       try {
         const data = await generateMockData(params);
         setResults(data);
+        setActiveTab('gantt');
       } catch (error) {
         console.error("Simulation failed:", error);
-        alert("An error occurred during the simulation. Check console.");
+        alert("Ocorreu um erro durante a simulação.");
       } finally {
         setIsRunning(false);
       }
@@ -61,7 +62,6 @@ const App: React.FC = () => {
       />
 
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        {/* Top Navigation for Tabs */}
         <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm z-10">
            <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg">
              <button
@@ -69,38 +69,36 @@ const App: React.FC = () => {
                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'gantt' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
              >
                <Clock size={16} />
-               Gantt Schedule
+               Agenda Gantt
              </button>
              <button
                onClick={() => setActiveTab('bi')}
                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'bi' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
              >
                <LayoutDashboard size={16} />
-               BI Dashboard
+               Dashboard BI
              </button>
              <button
                onClick={() => setActiveTab('map')}
                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'map' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
              >
                <MapIcon size={16} />
-               Route Map
+               Mapa de Rotas
              </button>
            </div>
            
-           {/* Summary Stats Pill */}
            {results.summary.totalTrips > 0 && (
              <div className="flex gap-4 text-xs font-semibold bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 text-slate-600">
                <span className="text-slate-400 mr-2 uppercase tracking-wider text-[10px]">
-                 {params.mode === 'simulator' ? 'Simulation Mode' : 'AI Optimization'}
+                 {params.mode === 'simulator' ? 'Simulação Manual' : 'Otimização Auto'}
                </span>
-               <span>Trips: {results.summary.totalTrips}</span>
+               <span>Viagens: {results.summary.totalTrips}</span>
                <span className="w-px h-4 bg-slate-300"></span>
-               <span>Finish: {results.summary.completionTime}</span>
+               <span>Conclusão: {results.summary.completionTime}</span>
              </div>
            )}
         </div>
 
-        {/* Main Content Area */}
         <div className="flex-1 overflow-hidden relative bg-slate-50">
           {activeTab === 'gantt' && <GanttTab data={results} />}
           {activeTab === 'bi' && <BITableTab data={results} />}

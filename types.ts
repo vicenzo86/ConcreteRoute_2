@@ -1,4 +1,5 @@
 
+
 export interface WorkSite {
   id: string;
   name: string;
@@ -7,6 +8,7 @@ export interface WorkSite {
   volume: number; // m3
   lat: number;
   lng: number;
+  trucksAssigned?: number; 
 }
 
 export interface UploadedWork {
@@ -15,15 +17,15 @@ export interface UploadedWork {
 }
 
 export interface WorkConstraint {
-  workIndex: number; // Corresponds to the index in uploadedData or default list
+  workIndex: number; 
   forcedTrucks: number;
-  forcedPumpId: number; // 1-based index
-  forcedStartTime: string; // HH:MM
-  locked: boolean; // TRUE = Manual inputs, FALSE = Auto allocate
+  forcedPumpId: number; 
+  forcedStartTime: string; 
+  locked: boolean; 
 }
 
 export interface SimulationParams {
-  mode: 'optimizer' | 'simulator'; // New Toggle
+  mode: 'optimizer' | 'simulator'; 
   apiKey: string;
   branchAddress: string;
   branchLat: string;
@@ -31,14 +33,14 @@ export interface SimulationParams {
   loadTime: number; 
   unloadTime: number; 
   totalTrucks: number;
-  truckCapacity: number; // New Parameter: m3 per truck
+  truckCapacity: number; 
   totalPumps: number;
-  startDate: string; // New Parameter: YYYY-MM-DD
+  startDate: string; 
   startTime: string; 
   generations: number;
   popSize: number;
   uploadedData?: UploadedWork[];
-  manualConstraints: WorkConstraint[]; // User inputs for simulator
+  manualConstraints: WorkConstraint[]; 
 }
 
 export interface ScheduleItem {
@@ -61,4 +63,13 @@ export interface OptimizationResult {
     completionTime: string;
     efficiency: number;
   };
+}
+
+// Added HistoryItem interface to fix the error: Module '"../types"' has no exported member 'HistoryItem'
+export interface HistoryItem {
+  id: string;
+  timestamp: number;
+  mode: 'optimizer' | 'simulator';
+  params: SimulationParams;
+  result: OptimizationResult;
 }
