@@ -90,11 +90,12 @@ export const generateMockData = async (params: SimulationParams): Promise<Optimi
         id: `W-${i + 1}`,
         name: `Obra ${i + 1}`,
         address: item.address,
+        // DYNAMIC VOLUME: loads * truckCapacity
         volume: item.loads * params.truckCapacity,
         loads: item.loads > 0 ? item.loads : 1,
         lat: coords.lat,
         lng: coords.lng,
-        trucksAssigned: 0 // Placeholder
+        trucksAssigned: 0 
       };
     }));
   } else {
@@ -107,10 +108,11 @@ export const generateMockData = async (params: SimulationParams): Promise<Optimi
         name: `Obra Exemplo ${i + 1}`,
         address: `Navegantes, SC`,
         loads: loads,
+        // DYNAMIC VOLUME: loads * truckCapacity
         volume: loads * params.truckCapacity,
         lat: coords.lat,
         lng: coords.lng,
-        trucksAssigned: 0 // Placeholder
+        trucksAssigned: 0 
       };
     });
   }
@@ -123,7 +125,6 @@ export const generateMockData = async (params: SimulationParams): Promise<Optimi
 };
 
 function runOptimizer(works: WorkSite[], branchCoords: {lat: number, lng: number}, params: SimulationParams): OptimizationResult {
-  // Trabalhamos com os objetos reais para mutação direta de trucksAssigned
   let pendingWorks = works.map(w => {
     const travelTime = getSimulatedTravelTime(branchCoords, w);
     const unitTime = params.loadTime + (2 * travelTime) + params.unloadTime;
@@ -133,7 +134,6 @@ function runOptimizer(works: WorkSite[], branchCoords: {lat: number, lng: number
   const numPumps = params.totalPumps;
   const totalTrucks = params.totalTrucks;
   
-  // Distribuição proporcional de frota por bomba
   const totalEstimatedTime = pendingWorks.reduce((acc, w) => acc + w.totalTimeEst, 0);
   const trucksPerPump: number[] = new Array(numPumps).fill(0);
   let remainingTrucks = totalTrucks;
@@ -145,7 +145,6 @@ function runOptimizer(works: WorkSite[], branchCoords: {lat: number, lng: number
     remainingTrucks -= assigned;
   }
 
-  // Ajuste fino da frota
   let pIdx = 0;
   while (remainingTrucks > 0) { trucksPerPump[pIdx % numPumps]++; remainingTrucks--; pIdx++; }
   while (remainingTrucks < 0) { if (trucksPerPump[pIdx % numPumps] > 1) { trucksPerPump[pIdx % numPumps]--; remainingTrucks++; } pIdx++; }
@@ -162,7 +161,6 @@ function runOptimizer(works: WorkSite[], branchCoords: {lat: number, lng: number
   const [sh, sm] = params.startTime.split(':').map(Number);
   const startDateTime = new Date(year, month - 1, day, sh, sm, 0, 0);
 
-  // Mapeamos os pendentes de volta para os objetos de 'works' para garantir que trucksAssigned apareça no BI
   const workMap = new Map(works.map(w => [w.id, w]));
 
   while (pendingWorks.length > 0) {
@@ -182,7 +180,6 @@ function runOptimizer(works: WorkSite[], branchCoords: {lat: number, lng: number
       const arrivalAtSite = departTime + travelTime;
       const interval = durationMin / realWork.loads;
 
-      // ATRIBUIÇÃO CRÍTICA PARA O BI E MAPA
       realWork.trucksAssigned = pump.trucks;
 
       for (let l = 0; l < realWork.loads; l++) {
@@ -230,11 +227,9 @@ function runSimulator(works: WorkSite[], branchCoords: {lat: number, lng: number
         id: i + 1,
         availableTime: globalStartTimeMin,
         coords: { ...branchCoords },
-        // Se a bomba está sendo usada por um manual, usamos o valor do manual, senão o calculado
         trucks: trucksPerAutoPump 
     }));
 
-    // Obras Manuais
     for (const workIdx of manualIndices) {
         const work = works[workIdx];
         const constraint = params.manualConstraints[workIdx];
@@ -250,7 +245,6 @@ function runSimulator(works: WorkSite[], branchCoords: {lat: number, lng: number
         const durationMin = (cycleTime * work.loads) / trucks;
         const interval = durationMin / work.loads;
 
-        // GRAVAÇÃO DO DADO PARA O DASHBOARD
         work.trucksAssigned = trucks;
 
         for (let l = 0; l < work.loads; l++) {
@@ -267,7 +261,6 @@ function runSimulator(works: WorkSite[], branchCoords: {lat: number, lng: number
         pumpState.coords = { lat: work.lat, lng: work.lng };
     }
 
-    // Obras Automáticas
     const autoWorks = autoIndices.map(i => works[i]);
     for (const work of autoWorks) {
         pumpsState.sort((a, b) => a.availableTime - b.availableTime);
@@ -279,7 +272,6 @@ function runSimulator(works: WorkSite[], branchCoords: {lat: number, lng: number
         const durationMin = (cycleTime * work.loads) / trucks;
         const interval = durationMin / work.loads;
 
-        // GRAVAÇÃO DO DADO PARA O DASHBOARD
         work.trucksAssigned = trucks;
 
         for (let l = 0; l < work.loads; l++) {
@@ -302,7 +294,7 @@ function buildResult(works: WorkSite[], branchCoords: {lat: number, lng: number}
     const allEndTimes = schedule.map(s => s.endTime.getTime());
     const maxTime = allEndTimes.length > 0 ? new Date(Math.max(...allEndTimes)) : new Date();
     return {
-      works: [...works], // Retornamos o array mutado com trucksAssigned
+      works: [...works], 
       branchLocation: branchCoords,
       schedule: schedule.sort((a,b) => a.startTime.getTime() - b.startTime.getTime()),
       summary: {

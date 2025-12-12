@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect, useMemo } from 'react';
 import { SimulationParams, UploadedWork, WorkConstraint } from '../types';
-import { Settings, Play, Truck, FileSpreadsheet, Upload, Sliders, Calculator, Zap, Trash2, Lock, Unlock, AlertTriangle } from 'lucide-react';
+import { Settings, Play, Truck, FileSpreadsheet, Sliders, Calculator, Zap, Trash2, Lock, Unlock, AlertTriangle } from 'lucide-react';
 
 // Declare global variable loaded via script tag in index.html
 declare const readXlsxFile: any;
@@ -152,7 +152,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
                 {isUsingUploadedData && ( <button onClick={clearData} className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1"><Trash2 size={10} /> Reset</button> )}
             </div>
 
-            {/* Upload Section - RESTORING BUTTONS */}
             <div className="grid grid-cols-1 gap-2">
                 <input 
                     type="file" 
@@ -241,6 +240,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
                 <input type="number" min="1" value={params.totalTrucks} onChange={(e) => handleChange('totalTrucks', Number(e.target.value))} className={`w-full bg-slate-800 border rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none ${isOverCapacity ? 'border-red-500' : 'border-slate-700'}`} />
              </div>
           </div>
+          {/* New field: Truck Capacity */}
+          <div className="grid grid-cols-2 gap-3">
+             <div className="space-y-1">
+                <label className="text-[10px] text-slate-400">Capacidade (m³)</label>
+                <input type="number" min="1" value={params.truckCapacity} onChange={(e) => handleChange('truckCapacity', Number(e.target.value))} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none" />
+             </div>
+             <div className="space-y-1">
+                <label className="text-[10px] text-slate-400">Data</label>
+                <input type="date" value={params.startDate} onChange={(e) => handleChange('startDate', e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none" />
+             </div>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-[10px] text-slate-400">Carga (min)</label>
@@ -251,13 +261,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
               <input type="number" value={params.unloadTime} onChange={(e) => handleChange('unloadTime', Number(e.target.value))} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1">
              <div className="space-y-1">
-                <label className="text-[10px] text-slate-400">Data</label>
-                <input type="date" value={params.startDate} onChange={(e) => handleChange('startDate', e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none" />
-             </div>
-             <div className="space-y-1">
-                <label className="text-[10px] text-slate-400">Início</label>
+                <label className="text-[10px] text-slate-400">Hora Início Operação</label>
                 <input type="time" value={params.startTime} onChange={(e) => handleChange('startTime', e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none" />
              </div>
           </div>
