@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect, useMemo } from 'react';
 import { SimulationParams, UploadedWork, WorkConstraint } from '../types';
-import { Settings, Play, Truck, FileSpreadsheet, Sliders, Calculator, Zap, Trash2, Lock, Unlock, AlertTriangle } from 'lucide-react';
+import { Settings, Play, Truck, FileSpreadsheet, Sliders, Calculator, Zap, Trash2, Lock, Unlock, AlertTriangle, LogOut } from 'lucide-react';
 
 // Declare global variable loaded via script tag in index.html
 declare const readXlsxFile: any;
@@ -11,9 +11,10 @@ interface SidebarProps {
   setParams: React.Dispatch<React.SetStateAction<SimulationParams>>;
   onRun: () => void;
   isRunning: boolean;
+  onLogout?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRunning }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRunning, onLogout }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync manual constraints when uploaded data changes
@@ -126,10 +127,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
   return (
     <div className="w-80 bg-slate-900 text-white flex flex-col h-full border-r border-slate-700 shadow-xl z-20 overflow-hidden">
       <div className="p-5 border-b border-slate-700 bg-slate-900 z-20">
-        <h1 className="text-xl font-bold flex items-center gap-2 mb-4">
-          <Truck className="text-yellow-500" />
-          Concrete Router
-        </h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <Truck className="text-amber-500" />
+            Concrete Router
+          </h1>
+          {onLogout && (
+            <button 
+              onClick={onLogout}
+              className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-red-400 transition-colors"
+              title="Sair do sistema"
+            >
+              <LogOut size={18} />
+            </button>
+          )}
+        </div>
         
         <div className="bg-slate-800 p-1 rounded-lg flex relative">
             <button onClick={() => handleChange('mode', 'optimizer')} className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded transition-all z-10 ${params.mode === 'optimizer' ? 'text-slate-900' : 'text-slate-400 hover:text-white'}`}>
@@ -138,7 +150,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
             <button onClick={() => handleChange('mode', 'simulator')} className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded transition-all z-10 ${params.mode === 'simulator' ? 'text-slate-900' : 'text-slate-400 hover:text-white'}`}>
                 <Sliders size={14} /> Sim
             </button>
-            <div className={`absolute top-1 bottom-1 w-1/2 bg-yellow-500 rounded shadow transition-all duration-300 ${params.mode === 'simulator' ? 'translate-x-full' : 'translate-x-0'}`}></div>
+            <div className={`absolute top-1 bottom-1 w-1/2 bg-amber-500 rounded shadow transition-all duration-300 ${params.mode === 'simulator' ? 'translate-x-full' : 'translate-x-0'}`}></div>
         </div>
       </div>
 
@@ -146,7 +158,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
         {/* Project Section */}
         <div className="space-y-3">
             <div className="flex items-center justify-between">
-                <h2 className="text-xs font-semibold uppercase text-yellow-500 tracking-wider flex items-center gap-1">
+                <h2 className="text-xs font-semibold uppercase text-amber-500 tracking-wider flex items-center gap-1">
                     <Calculator size={12} /> {isUsingUploadedData ? 'Lista de Projetos' : 'Lista Demo'}
                 </h2>
                 {isUsingUploadedData && ( <button onClick={clearData} className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1"><Trash2 size={10} /> Reset</button> )}
@@ -183,24 +195,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
                             const workData = params.uploadedData && params.uploadedData[idx];
                             const displayName = workData ? `${workData.address.substring(0, 20)}...` : `Demo Work ${idx + 1}`;
                             return (
-                                <div key={idx} className={`p-2 rounded border text-xs transition-colors ${constraint.locked ? 'bg-slate-900 border-yellow-500/50' : 'bg-slate-800/50 border-slate-700'}`}>
+                                <div key={idx} className={`p-2 rounded border text-xs transition-colors ${constraint.locked ? 'bg-slate-900 border-amber-500/50' : 'bg-slate-800/50 border-slate-700'}`}>
                                     <div className="flex justify-between items-center mb-2">
-                                        <div className={`font-bold truncate w-3/4 ${constraint.locked ? 'text-yellow-400' : 'text-slate-400'}`}>{displayName}</div>
-                                        <button onClick={() => toggleLock(idx)} className={`p-1 rounded hover:bg-slate-700 ${constraint.locked ? 'text-yellow-500' : 'text-slate-600'}`}>{constraint.locked ? <Lock size={14} /> : <Unlock size={14} />}</button>
+                                        <div className={`font-bold truncate w-3/4 ${constraint.locked ? 'text-amber-400' : 'text-slate-400'}`}>{displayName}</div>
+                                        <button onClick={() => toggleLock(idx)} className={`p-1 rounded hover:bg-slate-700 ${constraint.locked ? 'text-amber-500' : 'text-slate-600'}`}>{constraint.locked ? <Lock size={14} /> : <Unlock size={14} />}</button>
                                     </div>
                                     {constraint.locked ? (
                                         <div className="grid grid-cols-3 gap-2">
                                             <div>
                                                 <label className="text-[10px] text-slate-500 block mb-0.5">Cams</label>
-                                                <input type="number" min="1" value={constraint.forcedTrucks} onChange={(e) => handleConstraintChange(idx, 'forcedTrucks', Number(e.target.value))} className="w-full bg-slate-800 border border-slate-600 rounded px-1 py-1 text-center text-white focus:border-yellow-500 outline-none" />
+                                                <input type="number" min="1" value={constraint.forcedTrucks} onChange={(e) => handleConstraintChange(idx, 'forcedTrucks', Number(e.target.value))} className="w-full bg-slate-800 border border-slate-600 rounded px-1 py-1 text-center text-white focus:border-amber-500 outline-none" />
                                             </div>
                                             <div>
                                                 <label className="text-[10px] text-slate-500 block mb-0.5">Bomba</label>
-                                                <input type="number" min="1" max={params.totalPumps} value={constraint.forcedPumpId} onChange={(e) => handleConstraintChange(idx, 'forcedPumpId', Number(e.target.value))} className="w-full bg-slate-800 border border-slate-600 rounded px-1 py-1 text-center text-white focus:border-yellow-500 outline-none" />
+                                                <input type="number" min="1" max={params.totalPumps} value={constraint.forcedPumpId} onChange={(e) => handleConstraintChange(idx, 'forcedPumpId', Number(e.target.value))} className="w-full bg-slate-800 border border-slate-600 rounded px-1 py-1 text-center text-white focus:border-amber-500 outline-none" />
                                             </div>
                                             <div>
                                                 <label className="text-[10px] text-slate-500 block mb-0.5">Início</label>
-                                                <input type="time" value={constraint.forcedStartTime} onChange={(e) => handleConstraintChange(idx, 'forcedStartTime', e.target.value)} className="w-full bg-slate-800 border border-slate-600 rounded px-1 py-1 text-center text-white focus:border-yellow-500 outline-none p-0" />
+                                                <input type="time" value={constraint.forcedStartTime} onChange={(e) => handleConstraintChange(idx, 'forcedStartTime', e.target.value)} className="w-full bg-slate-800 border border-slate-600 rounded px-1 py-1 text-center text-white focus:border-amber-500 outline-none p-0" />
                                             </div>
                                         </div>
                                     ) : (
@@ -218,12 +230,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
           <h2 className="text-xs font-semibold uppercase text-slate-500 tracking-wider">Configuração de Mapa</h2>
           <div className="space-y-1">
             <label className="text-sm text-slate-300">HERE API Key</label>
-            <input type="password" value={params.apiKey} onChange={(e) => handleChange('apiKey', e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-yellow-500 transition-colors" />
+            <input type="password" value={params.apiKey} onChange={(e) => handleChange('apiKey', e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500 transition-colors" />
           </div>
           <div className="space-y-2">
             <div className="space-y-1">
                 <label className="text-xs text-slate-400">Endereço da Filial</label>
-                <input type="text" value={params.branchAddress} onChange={(e) => handleChange('branchAddress', e.target.value)} placeholder="Rua, Cidade..." className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-yellow-500" />
+                <input type="text" value={params.branchAddress} onChange={(e) => handleChange('branchAddress', e.target.value)} placeholder="Rua, Cidade..." className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-amber-500" />
             </div>
           </div>
         </div>
@@ -233,43 +245,42 @@ export const Sidebar: React.FC<SidebarProps> = ({ params, setParams, onRun, isRu
           <div className="grid grid-cols-2 gap-3">
              <div className="space-y-1">
                 <label className="text-[10px] text-slate-400">Total Bombas</label>
-                <input type="number" min="1" value={params.totalPumps} onChange={(e) => handleChange('totalPumps', Number(e.target.value))} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none" />
+                <input type="number" min="1" value={params.totalPumps} onChange={(e) => handleChange('totalPumps', Number(e.target.value))} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-amber-500 outline-none" />
              </div>
              <div className="space-y-1">
                 <label className="text-[10px] text-slate-400">Total Frota</label>
-                <input type="number" min="1" value={params.totalTrucks} onChange={(e) => handleChange('totalTrucks', Number(e.target.value))} className={`w-full bg-slate-800 border rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none ${isOverCapacity ? 'border-red-500' : 'border-slate-700'}`} />
+                <input type="number" min="1" value={params.totalTrucks} onChange={(e) => handleChange('totalTrucks', Number(e.target.value))} className={`w-full bg-slate-800 border rounded px-2 py-1.5 text-xs focus:border-amber-500 outline-none ${isOverCapacity ? 'border-red-500' : 'border-slate-700'}`} />
              </div>
           </div>
-          {/* New field: Truck Capacity */}
           <div className="grid grid-cols-2 gap-3">
              <div className="space-y-1">
                 <label className="text-[10px] text-slate-400">Capacidade (m³)</label>
-                <input type="number" min="1" value={params.truckCapacity} onChange={(e) => handleChange('truckCapacity', Number(e.target.value))} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none" />
+                <input type="number" min="1" value={params.truckCapacity} onChange={(e) => handleChange('truckCapacity', Number(e.target.value))} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-amber-500 outline-none" />
              </div>
              <div className="space-y-1">
                 <label className="text-[10px] text-slate-400">Data</label>
-                <input type="date" value={params.startDate} onChange={(e) => handleChange('startDate', e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none" />
+                <input type="date" value={params.startDate} onChange={(e) => handleChange('startDate', e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-amber-500 outline-none" />
              </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-[10px] text-slate-400">Carga (min)</label>
-              <input type="number" value={params.loadTime} onChange={(e) => handleChange('loadTime', Number(e.target.value))} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none" />
+              <input type="number" value={params.loadTime} onChange={(e) => handleChange('loadTime', Number(e.target.value))} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-amber-500 outline-none" />
             </div>
             <div className="space-y-1">
               <label className="text-[10px] text-slate-400">Descarga (min)</label>
-              <input type="number" value={params.unloadTime} onChange={(e) => handleChange('unloadTime', Number(e.target.value))} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none" />
+              <input type="number" value={params.unloadTime} onChange={(e) => handleChange('unloadTime', Number(e.target.value))} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-amber-500 outline-none" />
             </div>
           </div>
           <div className="grid grid-cols-1">
              <div className="space-y-1">
                 <label className="text-[10px] text-slate-400">Hora Início Operação</label>
-                <input type="time" value={params.startTime} onChange={(e) => handleChange('startTime', e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-yellow-500 outline-none" />
+                <input type="time" value={params.startTime} onChange={(e) => handleChange('startTime', e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-xs focus:border-amber-500 outline-none" />
              </div>
           </div>
         </div>
 
-        <button onClick={onRun} disabled={isRunning} className={`w-full py-3 px-4 rounded font-bold shadow-lg flex items-center justify-center gap-2 transition-all transform active:scale-95 mt-auto ${ isRunning ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-slate-900' }`}>
+        <button onClick={onRun} disabled={isRunning} className={`w-full py-3 px-4 rounded font-bold shadow-lg flex items-center justify-center gap-2 transition-all transform active:scale-95 mt-auto ${ isRunning ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-900' }`}>
           {isRunning ? ( <><Settings className="animate-spin" size={18} /> Processando... </> ) : ( <><Play size={18} /> {params.mode === 'simulator' ? 'Simular Plano' : 'Otimizar Rotas'} </> )}
         </button>
       </div>

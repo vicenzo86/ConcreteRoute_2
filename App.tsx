@@ -1,14 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { GanttTab } from './components/GanttTab';
 import { BITableTab } from './components/BITableTab';
 import { MapTab } from './components/MapTab';
+import { LoginScreen } from './components/LoginScreen';
 import { SimulationParams, OptimizationResult } from './types';
 import { generateMockData } from './utils/mockSimulation';
 import { LayoutDashboard, Clock, Map as MapIcon } from 'lucide-react';
+import { supabase } from './supabase';
 
 const App: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState<'gantt' | 'bi' | 'map'>('gantt');
   const [isRunning, setIsRunning] = useState(false);
   
@@ -36,6 +39,19 @@ const App: React.FC = () => {
     manualConstraints: []
   });
 
+  // Check Supabase session on mount
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const handleRunSimulation = async () => {
     setIsRunning(true);
     setTimeout(async () => {
@@ -52,13 +68,27 @@ const App: React.FC = () => {
     }, 100);
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setResults({ 
+      schedule: [], 
+      works: [], 
+      summary: { totalTrips: 0, completionTime: '', efficiency: 0 } 
+    });
+  };
+
+  if (!isAuthenticated) {
+    return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <div className="flex h-screen bg-slate-100 font-sans text-slate-800 overflow-hidden">
       <Sidebar 
         params={params} 
         setParams={setParams} 
         onRun={handleRunSimulation} 
-        isRunning={isRunning} 
+        isRunning={isRunning}
+        onLogout={handleLogout}
       />
 
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
